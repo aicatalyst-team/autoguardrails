@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: autoguardrails-status
+  namespace: poc-autoguardrails
+  labels:
+    app: autoguardrails
+    autopoc.io/project: autoguardrails
+    autopoc.io/scenario: status-check
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 60
+  template:
+    metadata:
+      labels:
+        app: autoguardrails
+        scenario: status-check
+    spec:
+      containers:
+        - name: autoguardrails
+          image: image-registry.openshift-image-registry.svc:5000/autopoc-test-builds/autoguardrails:latest
+          imagePullPolicy: Always
+          command: ["python3", "-m", "autoguardrails"]
+          args: ["status"]
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      restartPolicy: Never

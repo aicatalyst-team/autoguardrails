@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: poc-autoguardrails
+  labels:
+    app.kubernetes.io/name: autoguardrails
+    app.kubernetes.io/managed-by: autopoc
