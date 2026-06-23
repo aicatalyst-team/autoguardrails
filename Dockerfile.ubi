@@ -1,0 +1,23 @@
+FROM registry.access.redhat.com/ubi9/python-312
+
+WORKDIR /opt/app-root/src
+
+# Copy build metadata and install package
+COPY pyproject.toml ./
+COPY autoguardrails/ ./autoguardrails/
+
+# Install the package in editable mode (stdlib only, no extra deps)
+RUN pip install --no-cache-dir -e .
+
+# Copy data files needed at runtime
+COPY policy.md program.md judge_prompt.md eval_suite.jsonl results.tsv run_autoguardrails.sh ./
+
+# OpenShift compatibility: allow arbitrary UID
+RUN chgrp -R 0 /opt/app-root && chmod -R g=u /opt/app-root
+
+# No EXPOSE - CLI tool, no network port
+
+USER 1001
+
+ENTRYPOINT ["python", "-m", "autoguardrails"]
+CMD ["--help"]
