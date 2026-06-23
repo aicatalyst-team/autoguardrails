@@ -1,16 +1,19 @@
-FROM registry.access.redhat.com/ubi9/python-312
+FROM registry.access.redhat.com/ubi9/ubi-minimal
+
+# Install Python 3.12
+RUN microdnf install -y python3.12 python3.12-pip python3.12-setuptools && \
+    microdnf clean all && \
+    ln -sf /usr/bin/python3.12 /usr/bin/python3 && \
+    ln -sf /usr/bin/python3.12 /usr/bin/python
 
 WORKDIR /opt/app-root/src
-
-# Switch to root for package installation and file operations
-USER 0
 
 # Copy build metadata and install package
 COPY pyproject.toml ./
 COPY autoguardrails/ ./autoguardrails/
 
 # Install the package (stdlib only, no extra deps)
-RUN pip install --no-cache-dir -e .
+RUN python3 -m pip install --no-cache-dir -e .
 
 # Copy data files needed at runtime
 COPY policy.md program.md judge_prompt.md eval_suite.jsonl results.tsv run_autoguardrails.sh ./
@@ -18,10 +21,10 @@ COPY policy.md program.md judge_prompt.md eval_suite.jsonl results.tsv run_autog
 # OpenShift compatibility: allow arbitrary UID (group 0)
 RUN chgrp -R 0 /opt/app-root && chmod -R g=u /opt/app-root
 
-# Switch back to non-root user
+# Switch to non-root user
 USER 1001
 
 # No EXPOSE - CLI tool, no network port
 
-ENTRYPOINT ["python", "-m", "autoguardrails"]
+ENTRYPOINT ["python3", "-m", "autoguardrails"]
 CMD ["--help"]
