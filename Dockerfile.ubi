@@ -2,22 +2,26 @@ FROM registry.access.redhat.com/ubi9/python-312
 
 WORKDIR /opt/app-root/src
 
+# Switch to root for package installation and file operations
+USER 0
+
 # Copy build metadata and install package
 COPY pyproject.toml ./
 COPY autoguardrails/ ./autoguardrails/
 
-# Install the package in editable mode (stdlib only, no extra deps)
+# Install the package (stdlib only, no extra deps)
 RUN pip install --no-cache-dir -e .
 
 # Copy data files needed at runtime
 COPY policy.md program.md judge_prompt.md eval_suite.jsonl results.tsv run_autoguardrails.sh ./
 
-# OpenShift compatibility: allow arbitrary UID
+# OpenShift compatibility: allow arbitrary UID (group 0)
 RUN chgrp -R 0 /opt/app-root && chmod -R g=u /opt/app-root
 
-# No EXPOSE - CLI tool, no network port
-
+# Switch back to non-root user
 USER 1001
+
+# No EXPOSE - CLI tool, no network port
 
 ENTRYPOINT ["python", "-m", "autoguardrails"]
 CMD ["--help"]
